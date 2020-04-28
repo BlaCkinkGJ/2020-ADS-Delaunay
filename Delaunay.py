@@ -12,6 +12,7 @@ lines = [line.strip() for line in lines]
 N = int(lines[0])
 for index in range(1, N + 1):
     points += [[int(item) for item in lines[index].split()]]
+line = np.array([[int(item) for item in lines[N + 1].split()], [int(item) for item in lines[N + 2].split()]])  # 이 값을 변경해주세요.
 file.close()
 
 points = np.array(points)
@@ -36,6 +37,9 @@ def is_inside(cp, _p1, _p2, _p3):
     a2 = area(x1, y1, x, y, x3, y3)
     a3 = area(x1, y1, x2, y2, x, y)
 
+    if a1 == 0 or a2 == 0 or a3 == 0:
+        return False
+
     if a == a1 + a2 + a3:
         return True
     else:
@@ -46,10 +50,6 @@ tri = Delaunay(points)
 
 plt.triplot(points[:, 0], points[:, 1], tri.simplices.copy())
 plt.plot(points[:, 0], points[:, 1], 'o')
-
-#                from    to
-line = np.array([[2, 2], [12, 8]])  # 이 값을 변경해주세요.
-plt.plot(line[:, 0], line[:, 1])
 
 result = []
 for p in tri.simplices:
@@ -109,9 +109,10 @@ file = open("points_out.txt", "w")
 file.write(output)
 file.close()
 
+plt.plot(line[:, 0], line[:, 1], linestyle='dashed')
 for i in range(len(line)):
     ptxt = str(i) + "(" + str(line[i][0]) + "," + str(line[i][1]) + ")"
-    plt.annotate(ptxt, (line[i][0], line[i][1]), fontsize=9, fontweight='bold')
+    plt.annotate(ptxt, (line[i][0] - 0.25, line[i][1] - 0.4), fontsize=9, fontweight='bold', color='red')
 plt.plot(line[:, 0], line[:, 1], 'o')
 
 plt.show()
