@@ -6,7 +6,7 @@ from sympy.geometry import *
 
 points = []
 
-file = open("points.txt", "r")
+file = open("points.txt", "r") # 파일 이름이 points.txt입니다.
 lines = file.readlines()
 lines = [line.strip() for line in lines]
 N = int(lines[0])
