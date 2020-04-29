@@ -6,13 +6,14 @@ from sympy.geometry import *
 
 points = []
 
-file = open("points.txt", "r") # 파일 이름이 points.txt입니다.
+file = open("points.txt", "r")  # 파일 이름이 points.txt입니다.
 lines = file.readlines()
 lines = [line.strip() for line in lines]
 N = int(lines[0])
 for index in range(1, N + 1):
     points += [[int(item) for item in lines[index].split()]]
-line = np.array([[int(item) for item in lines[N + 1].split()], [int(item) for item in lines[N + 2].split()]])  # 이 값을 변경해주세요.
+line = np.array(
+    [[int(item) for item in lines[N + 1].split()], [int(item) for item in lines[N + 2].split()]])  # 이 값을 변경해주세요.
 file.close()
 
 points = np.array(points)
@@ -53,6 +54,7 @@ plt.plot(points[:, 0], points[:, 1], 'o')
 
 result = []
 result_vertex = set()
+visited_vertex = set()
 for p in tri.simplices:
     # line
     P1, P2 = Point(line[0, 0], line[0, 1]), Point(line[1, 0], line[1, 1])
@@ -85,35 +87,70 @@ for p in tri.simplices:
     p2 = points[p[1]]
     p3 = points[p[2]]
 
-    is_intersect = False
+    is_add_result = False
     for index in range(len(M)):
         if is_inside(cp1, p1, p2, p3) or is_inside(cp2, p1, p2, p3) or (len(M[index]) > 0 and not C[index]):
             result += [list(p)]
+            result_vertex.discard(p[0])
+            visited_vertex.add(p[0])
+            result_vertex.discard(p[1])
+            visited_vertex.add(p[1])
+            result_vertex.discard(p[2])
+            visited_vertex.add(p[2])
+            is_add_result = True
             break
-    if not (P1 == P3 or P1 == P4 or P1 == P5 or P2 == P3 or P2 == P4 or P2 == P5):
-        if C1:
+
+    if not is_add_result:
+        if C1 and not (p[0] in visited_vertex):
             result_vertex.add(p[0])
-        if C2:
+        if C2 and not (p[1] in visited_vertex):
             result_vertex.add(p[1])
-        if C3:
+        if C3 and not (p[2] in visited_vertex):
             result_vertex.add(p[2])
 
 output_list = []
 sx, sy = line[0]
 for point_index in result:
+    P1 = Point(line[0, 0], line[0, 1])
+    P2 = Point(line[1, 0], line[1, 1])
+
     p1, p2, p3 = point_index
     p1 = points[p1]
     p2 = points[p2]
     p3 = points[p3]
     x = sum([p1[0], p2[0], p3[0]]) / 3
     y = sum([p1[1], p2[1], p3[1]]) / 3
+    P3 = Point(x, y)
 
-    d = (sx - x)**2 + (sy - y)**2
+    S1 = Segment(P1, P3)
+    S2 = Segment(P1, P2)
+
+    d = (sx - x) ** 2 + (sy - y) ** 2
+
+    try:
+        if np.pi / 2 < Segment.angle_between(S1, S2) < 3 * np.pi / 2:
+            d = -d
+    except:
+        pass
+
     output_list.append((d, point_index))
 
 for point_index in result_vertex:
+    P1 = Point(line[0, 0], line[0, 1])
+    P2 = Point(line[1, 0], line[1, 1])
     x, y = points[point_index]
-    d = (sx - x)**2 + (sy - y)**2
+    P3 = Point(x, y)
+
+    S1 = Segment(P1, P3)
+    S2 = Segment(P1, P2)
+
+    d = (sx - x) ** 2 + (sy - y) ** 2
+    try:
+        if np.pi / 2 < Segment.angle_between(S1, S2) < 3 * np.pi / 2:
+            d = -d
+    except:
+        pass
+
     output_list.append((d, [point_index]))
 
 output_list.sort()
