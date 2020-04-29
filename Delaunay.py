@@ -90,6 +90,25 @@ for p in tri.simplices:
             result += [list(p)]
             break
 
+output_list = []
+sx, sy = line[0]
+for point_index in result:
+    p1, p2, p3 = point_index
+    p1 = points[p1]
+    p2 = points[p2]
+    p3 = points[p3]
+    x = sum([p1[0], p2[0], p3[0]]) / 3
+    y = sum([p1[1], p2[1], p3[1]]) / 3
+
+    d = (sx - x)**2 + (sy - y)**2
+    output_list.append((d, point_index))
+
+output_list.sort()
+
+result = []
+for output in output_list:
+    result += [output[1]]
+
 result = np.array(result)
 for point_index in result:
     p1, p2, p3 = point_index
