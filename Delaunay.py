@@ -4,22 +4,37 @@ import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 from sympy.geometry import *
 
+OUTER = "outer [ ]"
+FACE = "face [{},{},{}]"
+VERTEX = "vertex [{}]"
+EDGE = "edge [{},{}]"
+
+vertexes = []
 points = []
 
-file = open("points.txt", "r") # 파일 이름이 points.txt입니다.
+file = open("points.txt", "r")  # 파일 이름이 vertexes.txt입니다.
 lines = file.readlines()
 lines = [line.strip() for line in lines]
 N = int(lines[0])
 for index in range(1, N + 1):
+    vertexes += [[int(item) for item in lines[index].split()]]
+M = int(lines[N + 1])
+for index in range(N + 2, N + M + 1 + 1):
     points += [[int(item) for item in lines[index].split()]]
-line = np.array([[int(item) for item in lines[N + 1].split()], [int(item) for item in lines[N + 2].split()]])  # 이 값을 변경해주세요.
 file.close()
 
+vertexes = np.array(vertexes)
 points = np.array(points)
+
+for i in range(len(vertexes)):
+    ptxt = str(i) + "(" + str(vertexes[i][0]) + "," + str(vertexes[i][1]) + ")"
+    plt.annotate(ptxt, (vertexes[i][0], vertexes[i][1]), fontsize=9, fontweight='bold')
+plt.plot(vertexes[:, 0], vertexes[:, 1], 'o')
 
 for i in range(len(points)):
     ptxt = str(i) + "(" + str(points[i][0]) + "," + str(points[i][1]) + ")"
-    plt.annotate(ptxt, (points[i][0], points[i][1]), fontsize=9, fontweight='bold')
+    plt.annotate(ptxt, (points[i][0] - 0.25, points[i][1] - 0.4), fontsize=9, fontweight='bold', color='red')
+plt.plot(points[:, 0], points[:, 1], 'o')
 
 
 def area(x1, y1, x2, y2, x3, y3):
@@ -46,92 +61,62 @@ def is_inside(cp, _p1, _p2, _p3):
         return False
 
 
-tri = Delaunay(points)
+tri = Delaunay(vertexes)
 
-plt.triplot(points[:, 0], points[:, 1], tri.simplices.copy())
-plt.plot(points[:, 0], points[:, 1], 'o')
+plt.triplot(vertexes[:, 0], vertexes[:, 1], tri.simplices.copy())
 
 result = []
-for p in tri.simplices:
-    # line
-    P1, P2 = Point(line[0, 0], line[0, 1]), Point(line[1, 0], line[1, 1])
-    S1 = Segment(P1, P2)
+for index in range(len(points)):
+    command = OUTER
+    for p in tri.simplices:
+        # points
+        CP = Point(points[index, 0], points[index, 1])
 
-    # triangle
-    P3 = Point(points[p[0]][0], points[p[0]][1])
-    P4 = Point(points[p[1]][0], points[p[1]][1])
-    P5 = Point(points[p[2]][0], points[p[2]][1])
+        # triangle
+        P3 = Point(vertexes[p[0]][0], vertexes[p[0]][1])
+        P4 = Point(vertexes[p[1]][0], vertexes[p[1]][1])
+        P5 = Point(vertexes[p[2]][0], vertexes[p[2]][1])
 
-    S2 = Segment(P3, P4)
-    S3 = Segment(P3, P5)
-    S4 = Segment(P4, P5)
+        S2 = Segment(P3, P4)
+        S3 = Segment(P3, P5)
+        S4 = Segment(P4, P5)
 
-    M12 = S1.intersection(S2)
-    M13 = S1.intersection(S3)
-    M14 = S1.intersection(S4)
+        C1 = S2.contains(CP)
+        C2 = S3.contains(CP)
+        C3 = S4.contains(CP)
 
-    C1 = S1.contains(P3)
-    C2 = S1.contains(P4)
-    C3 = S1.contains(P5)
+        # 안에 있는 지 여부 확인
+        cp = np.array(points[index, :])
+        p1 = vertexes[p[0]]
+        p2 = vertexes[p[1]]
+        p3 = vertexes[p[2]]
 
-    M = [M12, M13, M14]
-    C = [C1 or C2, C1 or C3, C2 or C3]
-
-    # 안에 있는 지 여부 확인
-    cp1 = np.array(line[0, :])
-    cp2 = np.array(line[1, :])
-    p1 = points[p[0]]
-    p2 = points[p[1]]
-    p3 = points[p[2]]
-
-    is_intersect = False
-    for index in range(len(M)):
-        if is_inside(cp1, p1, p2, p3) or is_inside(cp2, p1, p2, p3) or (len(M[index]) > 0 and not C[index]):
-            result += [list(p)]
+        if CP == P3:
+            command = VERTEX.format(p[0])
+            break
+        elif CP == P4:
+            command = VERTEX.format(p[1])
+            break
+        elif CP == P5:
+            command = VERTEX.format(p[2])
             break
 
-output_list = []
-sx, sy = line[0]
-for point_index in result:
-    p1, p2, p3 = point_index
-    p1 = points[p1]
-    p2 = points[p2]
-    p3 = points[p3]
-    x = sum([p1[0], p2[0], p3[0]]) / 3
-    y = sum([p1[1], p2[1], p3[1]]) / 3
+        if C1:
+            command = EDGE.format(min(p[0], p[1]), max(p[0], p[1]))
+            break
+        elif C2:
+            command = EDGE.format(min(p[0], p[2]), max(p[0], p[2]))
+            break
+        elif C3:
+            command = EDGE.format(min(p[1], p[2]), max(p[1], p[2]))
+            break
 
-    d = (sx - x)**2 + (sy - y)**2
-    output_list.append((d, point_index))
-
-output_list.sort()
-
-result = []
-for output in output_list:
-    result += [output[1]]
-
-result = np.array(result)
-for point_index in result:
-    p1, p2, p3 = point_index
-    p1 = points[p1]
-    p2 = points[p2]
-    p3 = points[p3]
-    triangle = np.array([p1, p2, p3])
-    plt.fill(triangle[:, 0], triangle[:, 1], alpha=.3)
-
-output = ""
-for row in result:
-    for item in row:
-        output += str(item) + " "
-    output += "\n"
+        if is_inside(cp, p1, p2, p3):
+            command = FACE.format(p[0], p[1], p[2])
+            break
+    result += [command+'\n']
 
 file = open("points_out.txt", "w")
-file.write(output)
+file.writelines(result)
 file.close()
-
-plt.plot(line[:, 0], line[:, 1], linestyle='dashed')
-for i in range(len(line)):
-    ptxt = str(i) + "(" + str(line[i][0]) + "," + str(line[i][1]) + ")"
-    plt.annotate(ptxt, (line[i][0] - 0.25, line[i][1] - 0.4), fontsize=9, fontweight='bold', color='red')
-plt.plot(line[:, 0], line[:, 1], 'o')
-
 plt.show()

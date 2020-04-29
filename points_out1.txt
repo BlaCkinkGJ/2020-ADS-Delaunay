@@ -1,0 +1,6 @@
+vertex [9]
+edge [0,3]
+edge [4,5]
+vertex [10]
+outer [ ]
+face [4,9,5]
