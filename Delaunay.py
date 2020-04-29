@@ -52,6 +52,7 @@ plt.triplot(points[:, 0], points[:, 1], tri.simplices.copy())
 plt.plot(points[:, 0], points[:, 1], 'o')
 
 result = []
+result_vertex = set()
 for p in tri.simplices:
     # line
     P1, P2 = Point(line[0, 0], line[0, 1]), Point(line[1, 0], line[1, 1])
@@ -89,6 +90,12 @@ for p in tri.simplices:
         if is_inside(cp1, p1, p2, p3) or is_inside(cp2, p1, p2, p3) or (len(M[index]) > 0 and not C[index]):
             result += [list(p)]
             break
+    if C1:
+        result_vertex.add(p[0])
+    if C2:
+        result_vertex.add(p[1])
+    if C3:
+        result_vertex.add(p[2])
 
 output_list = []
 sx, sy = line[0]
@@ -103,6 +110,11 @@ for point_index in result:
     d = (sx - x)**2 + (sy - y)**2
     output_list.append((d, point_index))
 
+for point_index in result_vertex:
+    x, y = points[point_index]
+    d = (sx - x)**2 + (sy - y)**2
+    output_list.append((d, [point_index]))
+
 output_list.sort()
 
 result = []
@@ -111,12 +123,13 @@ for output in output_list:
 
 result = np.array(result)
 for point_index in result:
-    p1, p2, p3 = point_index
-    p1 = points[p1]
-    p2 = points[p2]
-    p3 = points[p3]
-    triangle = np.array([p1, p2, p3])
-    plt.fill(triangle[:, 0], triangle[:, 1], alpha=.3)
+    if len(point_index) == 3:
+        p1, p2, p3 = point_index
+        p1 = points[p1]
+        p2 = points[p2]
+        p3 = points[p3]
+        triangle = np.array([p1, p2, p3])
+        plt.fill(triangle[:, 0], triangle[:, 1], alpha=.3)
 
 output = ""
 for row in result:
