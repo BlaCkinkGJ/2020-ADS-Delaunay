@@ -90,12 +90,13 @@ for p in tri.simplices:
         if is_inside(cp1, p1, p2, p3) or is_inside(cp2, p1, p2, p3) or (len(M[index]) > 0 and not C[index]):
             result += [list(p)]
             break
-    if C1:
-        result_vertex.add(p[0])
-    if C2:
-        result_vertex.add(p[1])
-    if C3:
-        result_vertex.add(p[2])
+    if not (P1 == P3 or P1 == P4 or P1 == P5 or P2 == P3 or P2 == P4 or P2 == P5):
+        if C1:
+            result_vertex.add(p[0])
+        if C2:
+            result_vertex.add(p[1])
+        if C3:
+            result_vertex.add(p[2])
 
 output_list = []
 sx, sy = line[0]
